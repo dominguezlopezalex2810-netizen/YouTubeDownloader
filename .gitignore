@@ -1,0 +1,139 @@
+# Python bytecode and interpreter caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.so
+.Python
+
+# Virtual environments and local Python configuration
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+pip-wheel-metadata/
+
+# Test, coverage, type-checker and linter caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+junit.xml
+test-results/
+
+# Packaging and generated Windows distributions
+build/
+dist/
+dist-installer/
+*.egg-info/
+.eggs/
+*.egg
+*.whl
+*.msi
+*.msix
+*.appx
+*.appxbundle
+*-Setup-*.exe
+
+# FFmpeg build-time payload
+# The verified binaries are restored with prepare_ffmpeg.ps1. Keep the LGPL
+# license and instructions in Git, but do not commit >100 MB executables.
+bin/*
+!bin/README.txt
+!bin/FFMPEG-LICENSE.txt
+work-ffmpeg/
+
+# Application downloads, temporary files and diagnostics
+downloads/*
+!downloads/.gitkeep
+temp/*
+!temp/.gitkeep
+diagnostics/
+.ytdl-temp/
+*.part
+*.ytdl
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# Runtime state and logs
+logs/
+*.log
+*.log.*
+*.pid
+*.pid.lock
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+EBWebView/
+WebView2/
+.webview/
+
+# Environment files, credentials and signing material
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+certificates/
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+*.csr
+*.jks
+*.keystore
+*.snk
+*.mobileprovision
+*.authenticode
+
+# Downloaded archives and release artifacts
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.xz
+
+# Node/frontend caches (if tooling is added later)
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE and editor-local files
+.idea/
+.vscode/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# Windows and operating-system metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.DS_Store
+._*

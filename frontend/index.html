@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>YouTube Video Downloader</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="titlebar">
+    <div class="brand-mark" aria-hidden="true"><span></span></div>
+    <span>YouTube Video Downloader</span>
+    <button id="themeButton" class="icon-button" type="button" aria-label="Cambiar tema" title="Cambiar tema">
+      <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg>
+    </button>
+  </div>
+
+  <main class="shell">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">DESCARGADOR LOCAL</p>
+        <h1>Guarda tus vídeos.<br><span>Con la calidad que eliges.</span></h1>
+        <p class="intro">Pega un enlace de YouTube, revisa las opciones disponibles y descarga sin salir de la aplicación.</p>
+      </div>
+      <div class="privacy-chip">
+        <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-2.9 8.2-7 10-4.1-1.8-7-5.4-7-10V6l7-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+        Procesamiento local
+      </div>
+    </header>
+
+    <section class="card analyzer-card">
+      <label for="urlInput">Enlace del vídeo</label>
+      <div class="url-row">
+        <div class="input-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"></path><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"></path></svg>
+          <input id="urlInput" type="url" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" spellcheck="false">
+          <button id="clearUrl" class="clear-button hidden" type="button" aria-label="Borrar URL">×</button>
+        </div>
+        <button id="analyzeButton" class="primary-button" type="button">
+          <span>Analizar vídeo</span>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+      <div id="analyzeStatus" class="inline-status" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="videoSection" class="content-grid hidden" aria-live="polite">
+      <article class="card video-card">
+        <div class="thumbnail-wrap">
+          <img id="thumbnail" alt="Miniatura del vídeo">
+          <span id="duration" class="duration-badge"></span>
+        </div>
+        <div class="video-copy">
+          <p class="section-kicker">VÍDEO ENCONTRADO</p>
+          <h2 id="videoTitle"></h2>
+          <p id="channel" class="channel"></p>
+        </div>
+      </article>
+
+      <aside class="card options-card">
+        <div class="step-heading"><span>1</span><div><h3>Calidad</h3><p>Solo se muestran formatos disponibles</p></div></div>
+        <div id="qualityGrid" class="quality-grid"></div>
+        <div id="audioFormatRow" class="audio-format-row hidden">
+          <label for="audioFormat">Formato</label>
+          <select id="audioFormat"><option value="m4a">M4A (AAC)</option><option value="mp3">MP3</option></select>
+        </div>
+
+        <div class="divider"></div>
+        <div class="step-heading"><span>2</span><div><h3>Destino</h3><p>Elige dónde guardar el archivo</p></div></div>
+        <div class="folder-row">
+          <div class="folder-display"><svg viewBox="0 0 24 24"><path d="M3 6h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"></path></svg><span id="folderPath">Ninguna carpeta seleccionada</span></div>
+          <button id="folderButton" class="secondary-button" type="button">Elegir carpeta</button>
+        </div>
+
+        <button id="downloadButton" class="download-button" type="button" disabled>
+          <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>
+          Descargar
+        </button>
+      </aside>
+    </section>
+
+    <section id="progressSection" class="card progress-card hidden" aria-live="polite">
+      <div class="progress-top">
+        <div class="status-icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg></div>
+        <div class="progress-copy"><p id="statusText">Preparando descarga...</p><span id="filenameText">Preparando archivo</span></div>
+        <strong id="percentText">0%</strong>
+      </div>
+      <div class="progress-track"><div id="progressBar" class="progress-fill"></div></div>
+      <div class="progress-meta"><span id="sizeText">Calculando tamaño...</span><span id="speedText">—</span></div>
+      <div class="progress-actions">
+        <button id="cancelButton" class="danger-button" type="button">Cancelar</button>
+        <button id="openFolderButton" class="secondary-button hidden" type="button">Abrir carpeta</button>
+      </div>
+    </section>
+
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+  </main>
+  <footer>Descarga únicamente contenido que tengas derecho a guardar.</footer>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
