@@ -1,150 +1,255 @@
 # YouTube Video Downloader
 
-Aplicación de escritorio local para Windows con interfaz HTML5, API FastAPI y motor `yt-dlp`. Analiza un vídeo, muestra únicamente sus resoluciones reales, descarga la pista de vídeo elegida junto con el mejor audio disponible y las combina mediante FFmpeg. También permite extraer audio a M4A o MP3.
+Aplicación de escritorio para Windows que permite analizar un vídeo de YouTube y descargar las calidades disponibles mediante una interfaz sencilla. Este **YouTube downloader for Windows** combina un frontend HTML5/JavaScript con un backend local en Python y FastAPI, utiliza `yt-dlp` para obtener los formatos y FFmpeg para procesar vídeo y audio.
 
-El formato de audio recomendado es M4A con AAC-LC, 44,1 kHz, estéreo y 160 kbps. Esta configuración se eligió porque fue aceptada en una prueba práctica con el flujo Dispositivos Apple para Windows + iPhone, mientras que la configuración anterior de 48 kHz/192 kbps fue rechazada por ese flujo concreto. Esto no implica que 48 kHz/192 kbps sea incompatible con iPhone en general. La pista siempre se recodifica realmente con el FFmpeg incluido y se valida después con FFprobe; no se limita a cambiar la extensión.
+Puede guardar vídeo en MP4 hasta 4K cuando la fuente lo permite, o extraer solo el audio en M4A/AAC o MP3. Todo el procesamiento se realiza localmente en el ordenador del usuario.
 
-> Usa la aplicación solo para contenido propio, con licencia compatible o que tengas autorización para descargar. YouTube puede cambiar su plataforma y algunas descargas pueden estar limitadas por sus condiciones de servicio.
+> **Estado del proyecto:** versión funcional para Windows 10/11 de 64 bits. Actualmente procesa vídeos individuales; no descarga listas de reproducción ni importa sesiones o cookies de usuario.
 
-## Requisitos
+## ✨ Features
+
+- Análisis de URL con miniatura, título, duración y canal.
+- Detección de las resoluciones que realmente ofrece cada vídeo.
+- Descarga de vídeo en 2160p (4K), 1440p, 1080p, 720p, 480p, 360p, 240p o 144p cuando estén disponibles.
+- Selección automática de la mejor pista de audio para la resolución de vídeo elegida.
+- Combinación de vídeo y audio en MP4 mediante FFmpeg.
+- Modo **Solo audio** con:
+  - M4A con AAC-LC, 44,1 kHz, estéreo y bitrate objetivo de 160 kbps.
+  - MP3 como formato alternativo independiente.
+- Metadatos M4A obtenidos de YouTube: título, artista/canal, álbum y fecha cuando existen.
+- Validación automática de los M4A generados mediante FFprobe.
+- Progreso, porcentaje, velocidad y tamaño descargado/total cuando la fuente lo informa.
+- Cancelación de descargas y limpieza de archivos temporales.
+- Selector nativo de carpeta y acceso directo a la carpeta al finalizar.
+- Interfaz inspirada en Windows 11, responsive, con modo claro y oscuro.
+- FFmpeg y FFprobe incluidos en las distribuciones compiladas para Windows; no dependen del `PATH` del usuario.
+
+## 📥 Download
+
+Los usuarios que solo quieran utilizar la aplicación deben visitar la sección [**Releases**](../../releases) y descargar la última versión estable publicada para Windows.
+
+La distribución utiliza el formato `onedir`: conserva completa la carpeta extraída, incluida su subcarpeta `bin`. No copies ni ejecutes únicamente `YouTube Video Downloader.exe`, porque FFmpeg, FFprobe y las dependencias del runtime viajan junto a él.
+
+El código fuente que GitHub adjunta automáticamente a cada versión está destinado a desarrolladores y no es la aplicación compilada.
+
+## 🖥️ Requirements
+
+### Para usuarios de la versión compilada
+
+- Windows 10 u 11 de 64 bits.
+- Microsoft Edge WebView2 Runtime, incluido normalmente en Windows 11 y en instalaciones actualizadas de Windows 10.
+- Conexión a Internet para analizar y descargar el contenido.
+
+No se necesita instalar Python ni FFmpeg globalmente. Una distribución completa contiene:
+
+```text
+YouTube Video Downloader/
+├── YouTube Video Downloader.exe
+├── bin/
+│   ├── ffmpeg.exe
+│   ├── ffprobe.exe
+│   └── FFMPEG-LICENSE.txt
+└── _internal/
+```
+
+### Para desarrollo
 
 - Windows 10/11 de 64 bits.
-- Python 3.11 o 3.12.
-- FFmpeg incluido en `bin/`. No se necesita una instalación global ni modificar `PATH`.
-- Microsoft Edge WebView2 Runtime (incluido de serie en Windows 11 y en la mayoría de equipos con Windows 10).
+- Python 3.11 o 3.12; el proyecto se valida y empaqueta actualmente con Python 3.12.
+- PowerShell.
+- Conexión a Internet para instalar dependencias y preparar los binarios verificados de FFmpeg.
+- WebView2 Runtime para abrir la ventana de escritorio.
 
-Para comprobar el FFmpeg incluido:
+Inno Setup 6 solo es necesario para crear el instalador. Windows SDK y un certificado Authenticode son opcionales y se utilizan únicamente para firmar una publicación.
 
-```powershell
-.\bin\ffmpeg.exe -version
-.\bin\ffprobe.exe -version
+## 🚀 Usage
+
+1. Abre **YouTube Video Downloader**.
+2. Introduce la URL de un vídeo de YouTube.
+3. Pulsa **Analizar vídeo**.
+4. Revisa la información detectada y elige una resolución o **Solo audio**.
+5. Para audio, selecciona **M4A (AAC)** —recomendado— o **MP3**.
+6. Elige la carpeta de destino.
+7. Pulsa **Descargar** y sigue el progreso desde la aplicación.
+8. Al finalizar, utiliza **Abrir carpeta** para localizar el archivo.
+
+Las opciones 4K, 2160p, 1440p, 1080p o 720p solo aparecen si esa resolución existe realmente en la fuente.
+
+## 🧩 How it works
+
+```text
+HTML5/CSS/JavaScript
+        │ API local + Server-Sent Events
+        ▼
+FastAPI en 127.0.0.1
+        │
+        ├── yt-dlp: análisis, formatos y descarga
+        ├── FFmpeg: combinación, conversión y metadatos
+        └── FFprobe: validación del audio final
 ```
 
-Si los binarios faltan en una copia nueva del código fuente, prepáralos con:
+- `pywebview` abre la interfaz como una ventana de escritorio basada en WebView2.
+- FastAPI sirve el frontend y expone una API exclusivamente local.
+- Las descargas se ejecutan en hilos de trabajo para no bloquear la interfaz.
+- Server-Sent Events comunica los cambios de progreso al frontend.
+- Para vídeo, `yt-dlp` elige la pista de la altura solicitada y el mejor audio disponible; FFmpeg las combina en MP4 cuando vienen separadas.
+- Para M4A, la aplicación recodifica realmente a AAC-LC. No se limita a cambiar la extensión del archivo.
 
-```powershell
-.\prepare_ffmpeg.ps1
-```
+La configuración M4A de 44,1 kHz y 160 kbps se eligió porque fue aceptada en una prueba práctica con Dispositivos Apple para Windows y un iPhone, mientras que la configuración anterior de 48 kHz/192 kbps fue rechazada por ese flujo concreto. Esto no significa que 48 kHz/192 kbps sea incompatible con iPhone en general.
 
-El script descarga una build estática LGPL de BtbN fijada por identificador y comprueba su SHA-256 antes de copiar los binarios y su licencia. La aplicación instalada nunca descarga ejecutables.
+## 🛠️ Development
 
-## Instalación y desarrollo
+Después de clonar el repositorio, abre PowerShell en su carpeta raíz.
 
-Desde la carpeta del proyecto:
+### 1. Crear y activar el entorno virtual
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
+```
+
+### 2. Instalar dependencias
+
+```powershell
 python -m pip install -r requirements-dev.txt
 ```
 
-Para ejecutar la aplicación como ventana nativa:
+`requirements-dev.txt` incluye las dependencias de ejecución y añade Pytest, HTTPX y PyInstaller.
+
+### 3. Preparar FFmpeg y FFprobe
+
+```powershell
+.\prepare_ffmpeg.ps1
+```
+
+El script descarga durante la preparación una build win64 LGPL fijada de BtbN, comprueba su SHA-256 y copia `ffmpeg.exe`, `ffprobe.exe` y su licencia a `bin/`. La aplicación instalada no descarga ni ejecuta actualizaciones de FFmpeg automáticamente.
+
+### 4. Ejecutar la aplicación
 
 ```powershell
 python run_app.py
 ```
 
-Para desarrollar el frontend con recarga automática del backend:
+Para trabajar con el backend en modo de recarga:
 
 ```powershell
 python run_dev.py
 ```
 
-Después abre `http://127.0.0.1:8765`. Este modo de navegador sirve para desarrollar la interfaz y API; el selector nativo de carpeta solo está disponible al ejecutar `run_app.py`.
+El servidor de desarrollo queda disponible en `http://127.0.0.1:8765`. El selector nativo de carpeta solo está disponible al ejecutar `run_app.py` mediante `pywebview`.
 
-## Crear el `.exe`
+### 5. Ejecutar las pruebas
 
-La opción más sencilla es:
+```powershell
+python -m pytest
+```
+
+## 🏗️ Building
+
+Prepara primero FFmpeg si `bin/ffmpeg.exe` todavía no existe:
+
+```powershell
+.\prepare_ffmpeg.ps1
+```
+
+Genera la distribución Windows con:
 
 ```powershell
 .\build_windows.ps1
 ```
 
-El script instala las dependencias de compilación, ejecuta las pruebas y genera una distribución estándar `onedir`:
+Este script instala las dependencias de desarrollo fijadas, ejecuta las pruebas y llama a PyInstaller con `YouTubeDownloader.spec`. El resultado se guarda en:
 
 ```text
-dist\YouTube Video Downloader\YouTube Video Downloader.exe
+dist\YouTube Video Downloader\
 ```
 
-### FFmpeg dentro de la distribución
+La build utiliza `onedir`, sin UPX ni ofuscación. Debe distribuirse la carpeta completa, no únicamente el `.exe`.
 
-`build_windows.ps1` exige que `bin\ffmpeg.exe` exista. PyInstaller copia ambos binarios a `dist\YouTube Video Downloader\bin\`. El backend calcula la ruta desde el ejecutable, no desde el directorio de trabajo, y pasa esa carpeta a `yt-dlp` mediante `ffmpeg_location`.
+Para analizar el resultado con Microsoft Defender:
 
-## Ejecutar en otro ordenador
+```powershell
+.\scan_defender.ps1
+```
 
-1. Copia completa la carpeta `dist\YouTube Video Downloader\` al equipo de destino, o usa el instalador Inno Setup.
-2. Verifica que la subcarpeta `bin\` viaja junto al ejecutable; no muevas únicamente el `.exe` fuera de la distribución.
-3. Comprueba que WebView2 Runtime está instalado; si falta, instala el runtime Evergreen desde Microsoft.
-4. Abre el `.exe`. No se necesita Python ni FFmpeg global.
+### Instalador opcional
 
-La configuración no usa UPX, ofuscación ni autoextracción en memoria. `onedir` produce más archivos, pero es más transparente para antivirus y diagnóstico que un único ejecutable autoextraíble.
-
-## Instalador convencional
-
-Instala [Inno Setup 6](https://jrsoftware.org/isinfo.php) y ejecuta:
+El proyecto incluye una definición de Inno Setup para una instalación por usuario en `%LOCALAPPDATA%\Programs`:
 
 ```powershell
 winget install JRSoftware.InnoSetup
 .\build_installer.ps1
 ```
 
-El instalador se crea en `dist-installer\`, instala por defecto en `%LOCALAPPDATA%\Programs\YouTube Video Downloader`, registra la desinstalación en Windows y ofrece un acceso directo de escritorio opcional. No solicita permisos de administrador en la instalación normal.
+El instalador se genera en `dist-installer/`, registra la desinstalación y ofrece un acceso directo de escritorio opcional.
 
-## Firma digital y SmartScreen
+El script `sign_release.ps1` deja preparado el uso de `signtool.exe` con SHA-256 y sellado de tiempo. El repositorio no contiene certificados, claves privadas ni credenciales.
 
-Para distribución pública, adquiere un certificado Authenticode de firma de código emitido por una autoridad de certificación reconocida. Los certificados EV suelen obtener reputación de SmartScreen con mayor rapidez; los certificados OV también son válidos, pero la reputación puede construirse con el tiempo. Ningún certificado garantiza que nunca aparezca una advertencia.
+## 🔐 Security
 
-1. Guarda el certificado de forma segura en el almacén de certificados de Windows o, preferiblemente, en un token/HSM. No copies claves privadas al repositorio.
-2. Instala Windows SDK para disponer de `signtool.exe`.
-3. Compila la aplicación y el instalador.
-4. Firma primero el ejecutable principal y después el instalador, usando SHA-256 y sellado de tiempo RFC 3161.
+- Las URL se limitan a `youtube.com`, sus subdominios y `youtu.be`; se rechazan otros hosts, direcciones IP y URLs con credenciales.
+- La carpeta de destino debe existir y ser un directorio válido.
+- El frontend no accede directamente al sistema de archivos ni inicia procesos externos.
+- `yt-dlp` se utiliza mediante su API de Python; no se construyen comandos de shell con valores proporcionados por el usuario.
+- Las llamadas directas a FFprobe y a utilidades del sistema utilizan listas de argumentos, no cadenas de comandos del usuario.
+- El servidor escucha exclusivamente en `127.0.0.1`.
+- Cada trabajo utiliza una carpeta temporal propia, eliminada al completar, cancelar o producirse un error.
+- Al cerrar la aplicación se solicita la cancelación de los trabajos activos y se detiene el servidor local.
+- La distribución no instala servicios, tareas programadas ni mecanismos de persistencia.
+- FFmpeg no se descarga durante la ejecución de la aplicación.
 
-El proyecto deja preparado el comando:
+Los vídeos privados, con restricción de edad, región o inicio de sesión pueden no estar disponibles. La aplicación no importa cookies ni credenciales del navegador.
 
-```powershell
-.\sign_release.ps1 -CertificateThumbprint "HUELLA_DEL_CERTIFICADO"
-```
+## 📦 Third-party software
 
-El script usa `signtool sign /fd SHA256 /tr ... /td SHA256` y verifica la firma con la política Authenticode. La huella se pasa en el momento de firmar; no se almacena ningún certificado, contraseña o clave.
+| Componente | Uso |
+|---|---|
+| [FastAPI](https://fastapi.tiangolo.com/) | API HTTP local |
+| [Uvicorn](https://www.uvicorn.org/) | Servidor ASGI local |
+| [Pydantic](https://docs.pydantic.dev/) | Validación de solicitudes |
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp) | Análisis y descarga de formatos |
+| [FFmpeg](https://ffmpeg.org/) | Combinación de vídeo/audio y conversión multimedia |
+| FFprobe | Inspección y validación de los archivos generados |
+| [pywebview](https://pywebview.flowrl.com/) | Ventana de escritorio para el frontend web |
+| Microsoft Edge WebView2 | Motor de renderizado de la interfaz en Windows |
+| [PyInstaller](https://pyinstaller.org/) | Creación de la distribución `onedir` |
+| [Inno Setup](https://jrsoftware.org/isinfo.php) | Instalador opcional para Windows |
 
-Para una cadena reproducible, compila siempre desde un entorno limpio con las versiones fijadas en `requirements.txt` y conserva el hash SHA-256 de cada entrega:
+Las versiones fijadas de los paquetes Python están en `requirements.txt` y `requirements-dev.txt`. Los detalles de redistribución se documentan en [THIRD_PARTY.md](THIRD_PARTY.md), y la licencia de la build incluida de FFmpeg se conserva en [bin/FFMPEG-LICENSE.txt](bin/FFMPEG-LICENSE.txt).
 
-```powershell
-Get-FileHash -Algorithm SHA256 ".\dist-installer\YouTubeVideoDownloader-Setup-1.0.0.exe"
-```
+Los ejecutables de FFmpeg no se almacenan en Git debido a su tamaño. `prepare_ffmpeg.ps1` recupera exactamente el paquete verificado necesario para compilar.
 
-## Comprobación con Microsoft Defender
+## 🧪 Testing
 
-Después de compilar:
+La suite actual contiene **10 pruebas automatizadas** y se ejecuta con Pytest. Comprueba, entre otros aspectos:
 
-```powershell
-.\scan_defender.ps1
-```
+- validación de URLs y rechazo de hosts no permitidos;
+- detección de resoluciones reales;
+- progreso, finalización, cancelación y limpieza de temporales;
+- errores de la API;
+- localización de FFmpeg independientemente del directorio de trabajo;
+- detección de una distribución incompleta;
+- combinación real de pistas separadas mediante FFmpeg;
+- generación M4A con AAC-LC, 44,1 kHz, estéreo y bitrate objetivo de 160 kbps;
+- escritura de metadatos y decodificación completa del audio resultante.
 
-El script ejecuta un análisis personalizado sobre la carpeta de distribución con la herramienta oficial `MpCmdRun.exe` y no desactiva ni modifica Defender. Si se produce una detección, no publiques el archivo: guarda el nombre exacto de la detección, el archivo afectado, su SHA-256, la versión de inteligencia de seguridad y el registro `%LOCALAPPDATA%\Temp\MpCmdRun.log`. Revisa primero dependencias y comportamiento; si resulta ser un falso positivo, envía el archivo a Microsoft Security Intelligence para revisión.
-
-SmartScreen evalúa reputación además de malware, por lo que un binario nuevo y limpio puede mostrar advertencia si aún no está firmado o no ha acumulado reputación. La solución legítima es firma consistente, origen HTTPS, metadatos estables y publicación mantenida, nunca desactivar o eludir la protección.
-
-## Arquitectura
+Resultado verificado en la versión actual:
 
 ```text
-frontend/        Interfaz HTML5/CSS/JavaScript
-backend/         API, validación, análisis y gestor de descargas
-tests/           Pruebas sin acceder a YouTube
-bin/             FFmpeg opcional para el empaquetado
-run_app.py       Ventana de escritorio y servidor local
-run_dev.py       Servidor con recarga para desarrollo
+10 passed
 ```
 
-El frontend nunca ejecuta procesos ni escribe directamente al sistema de archivos. Las descargas se ejecutan en hilos del backend y el progreso llega por Server-Sent Events. `yt-dlp` se usa mediante su API de Python, sin construir comandos de shell con datos del usuario.
+Las pruebas multimedia requieren que `bin/ffmpeg.exe` y `bin/ffprobe.exe` hayan sido preparados previamente.
 
-Consulta [THIRD_PARTY.md](THIRD_PARTY.md) para conocer todos los componentes externos y su finalidad.
+## 📄 License
 
-## Limitaciones reales
+Este repositorio **no incluye actualmente una licencia propia**. Que el código sea visible públicamente no concede automáticamente permiso para usarlo, modificarlo o redistribuirlo. Si se desea aceptar contribuciones o permitir reutilización, deberá añadirse una licencia explícita en una decisión separada.
 
-- Los vídeos privados, con restricciones de edad, región o sesión pueden requerir autenticación. Esta versión no importa cookies por seguridad; muestra un error comprensible.
-- El tamaño total puede ser una estimación o no estar disponible hasta avanzada la descarga, según lo que informe YouTube.
-- Para resoluciones modernas, YouTube suele separar vídeo y audio; FFmpeg es obligatorio para producir el archivo final.
-- Cancelar es cooperativo: se interrumpe en el siguiente evento de progreso de `yt-dlp`. Los fragmentos temporales del trabajo se eliminan al terminar o cancelar.
-- YouTube cambia con frecuencia. Actualiza `yt-dlp` si el análisis deja de funcionar: `python -m pip install -U yt-dlp`.
+Las dependencias y herramientas de terceros conservan sus propias licencias y condiciones. Consulta [THIRD_PARTY.md](THIRD_PARTY.md) y [bin/FFMPEG-LICENSE.txt](bin/FFMPEG-LICENSE.txt).
+
+## ⚠️ Disclaimer
+
+Utiliza este video downloader únicamente para contenido propio, de dominio público, con una licencia que permita su descarga o para el que tengas autorización. Es responsabilidad del usuario respetar los derechos de autor, los términos de servicio de YouTube y otras plataformas, y la legislación aplicable.
+
+YouTube cambia periódicamente su plataforma. Si el análisis deja de funcionar, puede ser necesario actualizar `yt-dlp` y volver a validar la aplicación antes de publicar una nueva versión.
